@@ -41,11 +41,11 @@ object DSL {
       responseModifiers.foldLeft(response)((response, modifier) => modifier(response))
   }
 
-  class ExpectationBuilder(val requestModifier: RequestModifier) {
+  class ExpectationBuilder(val requestModifier: RequestModifier)(implicit mockServerClient: MockServerClient) {
     def has(additionalRequestModifier: RequestModifier): ExpectationBuilder =
       new ExpectationBuilder(requestModifier and additionalRequestModifier)
 
-    def respond(responseModifier: ResponseModifier)(implicit mockServerClient: MockServerClient): Unit =
+    def respond(responseModifier: ResponseModifier): Unit =
       mockServerClient.when(requestModifier(mockRequest)).respond(responseModifier(mockResponse))
   }
 
@@ -99,13 +99,14 @@ object DSL {
   val *** = ""
   val anyPath = ***
 
-  object when {
+  def when(implicit client: MockServerClient) = new {
+
     def get(pathStr: String): ExpectationBuilder = new ExpectationBuilder(GET + path(pathStr))
 
     def post(pathStr: String): ExpectationBuilder = new ExpectationBuilder(POST + path(pathStr))
   }
 
-  object always extends ExpectationBuilder(CompositeRequestModifier())
+  def always(implicit client: MockServerClient) = new ExpectationBuilder(CompositeRequestModifier())
 
   object Statuses {
     val Ok = status(200)

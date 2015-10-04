@@ -11,15 +11,21 @@ import org.scalatest.FlatSpec
 
 class DslTest extends FlatSpec with MockFactory {
 
-  implicit val mockserverClient = mock[NoArgMockServerClient]
+  val mockServerClient = mock[NoArgMockServerClient]
   val forwardChain = mock[NoArgForwardChain]
 
   "Any method for any path" must "respond with status code 200" in {
-    expectRequestResponse(
-      mockRequest(),
-      mockResponse().withStatusCode(200))
+    expectRequestResponse(mockRequest(), mockResponse().withStatusCode(200))
+
+    implicit val client = mockServerClient
 
     always respond Ok
+  }
+
+  "Any method for any path with explicit client" must "respond with status code 200" in {
+    expectRequestResponse(mockRequest(), mockResponse().withStatusCode(200))
+
+   always(mockServerClient) respond Ok
   }
 
   "GET for any path" must "respond with status code 200" in {
@@ -27,13 +33,23 @@ class DslTest extends FlatSpec with MockFactory {
       mockRequest().withMethod("GET"),
       mockResponse().withStatusCode(200))
 
+    implicit val client = mockServerClient
+
     when get *** respond Ok
+  }
+
+  "GET for any path with explicit client" must "respond with status code 200" in {
+    expectRequestResponse(mockRequest().withMethod("GET"), mockResponse().withStatusCode(200))
+
+    when(mockServerClient) get *** respond Ok
   }
 
   "POST for any path" must "respond with status code 200" in {
     expectRequestResponse(
       mockRequest().withMethod("POST"),
       mockResponse().withStatusCode(200))
+
+    implicit val client = mockServerClient
 
     when post *** respond Ok
   }
@@ -42,6 +58,8 @@ class DslTest extends FlatSpec with MockFactory {
     expectRequestResponse(
       mockRequest().withMethod("GET").withPath("/path"),
       mockResponse().withStatusCode(200))
+
+    implicit val client = mockServerClient
 
     when get "/path" respond Ok
   }
@@ -55,6 +73,8 @@ class DslTest extends FlatSpec with MockFactory {
       mockResponse()
         .withStatusCode(200))
 
+    implicit val client = mockServerClient
+
     when get "/path" has param("k", "v") respond Ok
   }
 
@@ -67,6 +87,8 @@ class DslTest extends FlatSpec with MockFactory {
         .withQueryStringParameter("k2", "v2"),
       mockResponse()
         .withStatusCode(200))
+
+    implicit val client = mockServerClient
 
     when get "/path" has {
       param("k1", "v1") and param("k2", "v2")
@@ -82,6 +104,8 @@ class DslTest extends FlatSpec with MockFactory {
         .withHeader("h", "2"),
       mockResponse()
         .withStatusCode(200))
+
+    implicit val client = mockServerClient
 
     when get "/path" has {
       param("p", 1) and header("h", 2)
@@ -99,6 +123,8 @@ class DslTest extends FlatSpec with MockFactory {
         .withHeader("h2", "hv2"),
       mockResponse()
         .withStatusCode(400))
+
+    implicit val client = mockServerClient
 
     when get "/path" has {
       param("p1", "pv1") and
@@ -122,6 +148,8 @@ class DslTest extends FlatSpec with MockFactory {
       mockResponse()
         .withStatusCode(200))
 
+    implicit val client = mockServerClient
+
     when get "/path" has param("p1", "pv1") + param("p2", "pv2") + header("h1", "hv1") + header("h2", "hv2") respond Ok
   }
 
@@ -133,6 +161,8 @@ class DslTest extends FlatSpec with MockFactory {
       mockResponse()
         .withStatusCode(200)
         .withBody("The Response Body"))
+
+    implicit val client = mockServerClient
 
     when post *** has "The Request Body" respond Ok + "The Response Body"
   }
@@ -146,6 +176,8 @@ class DslTest extends FlatSpec with MockFactory {
         .withStatusCode(200)
         .withBody("The Response Body".getBytes))
 
+    implicit val client = mockServerClient
+
     when post *** has "The Request Body".getBytes respond Ok + "The Response Body".getBytes
   }
 
@@ -155,7 +187,7 @@ class DslTest extends FlatSpec with MockFactory {
 
   private def expectRequestResponse(expectedRequest: HttpRequest, expectedResponse: HttpResponse): Unit = {
     {
-      mockserverClient.when(_: HttpRequest)
+      mockServerClient.when(_: HttpRequest)
     }.expects(expectedRequest).returns(forwardChain)
     (forwardChain.respond _).expects(expectedResponse)
   }
