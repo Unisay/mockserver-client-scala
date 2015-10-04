@@ -18,5 +18,4 @@ libraryDependencies ++= Seq(
   "org.mock-server" % "mockserver-netty" % mockserverVersion % "test"
 )
 
-
 lazy val `mockserver-client-scala` = project in file(".")

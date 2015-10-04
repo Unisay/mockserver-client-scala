@@ -49,13 +49,25 @@ object DSL {
       mockServerClient.when(requestModifier(mockRequest)).respond(responseModifier(mockResponse))
   }
 
-  case object GET extends RequestModifier {
-    override def apply(request: MockRequest): MockRequest = request.withMethod("GET")
+  class MethodModifier(method: String) extends RequestModifier {
+    override def apply(request: MockRequest): MockRequest = request.withMethod(method)
   }
 
-  case object POST extends RequestModifier {
-    override def apply(request: MockRequest): MockRequest = request.withMethod("POST")
-  }
+  case object GET extends MethodModifier("GET")
+
+  case object HEAD extends MethodModifier("HEAD")
+
+  case object POST extends MethodModifier("POST")
+
+  case object PUT extends MethodModifier("PUT")
+
+  case object DELETE extends MethodModifier("DELETE")
+
+  case object TRACE extends MethodModifier("TRACE")
+
+  case object CONNECT extends MethodModifier("CONNECT")
+
+  case object OPTIONS extends MethodModifier("OPTIONS")
 
   case class path(str: String) extends RequestModifier {
     override def apply(request: MockRequest): MockRequest = request.withPath(str)
@@ -97,16 +109,49 @@ object DSL {
   }
 
   val *** = ""
-  val anyPath = ***
 
   def when(implicit client: MockServerClient) = new {
 
-    def get(pathStr: String): ExpectationBuilder = new ExpectationBuilder(GET + path(pathStr))
+    def get(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(GET + path(pathStr))
+    
+    def head(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(HEAD + path(pathStr))
 
-    def post(pathStr: String): ExpectationBuilder = new ExpectationBuilder(POST + path(pathStr))
+    def post(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(POST + path(pathStr))
+    
+    def put(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(PUT + path(pathStr))
+
+    def delete(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(DELETE + path(pathStr))
+
+    def trace(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(TRACE + path(pathStr))
+
+    def connect(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(CONNECT + path(pathStr))
+
+    def options(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(OPTIONS + path(pathStr))
   }
 
   def always(implicit client: MockServerClient) = new ExpectationBuilder(CompositeRequestModifier())
+
+  object Headers {
+    def Location(url: String) = header("Location", url)
+
+    def Accept(contentTypes: String*) = header("Accept", contentTypes.mkString(","))
+
+    def AcceptCharset(charsets: String*) = header("Accept-Charset", charsets.mkString(","))
+
+    def AcceptEncoding(encodings: String*) = header("Accept-Encoding", encodings.mkString(","))
+
+    def AcceptLanguage(languages: String*) = header("Accept-Language", languages.mkString(","))
+
+    def Authorization(value: String) = header("Authorization", value)
+
+    def CacheControl(value: String) = header("Cache-Control", value)
+
+    def ContentType(value: String) = header("Content-Type", value)
+
+    def Connection(value: String) = header("Connection", value)
+
+    def Cookie(value: String) = header("Cookie", value)
+  }
 
   object Statuses {
     val Ok = status(200)

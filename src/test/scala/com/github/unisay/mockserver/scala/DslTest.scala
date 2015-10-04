@@ -1,5 +1,6 @@
 package com.github.unisay.mockserver.scala
 
+import com.github.unisay.mockserver.scala.DSL.Headers._
 import com.github.unisay.mockserver.scala.DSL.Statuses._
 import com.github.unisay.mockserver.scala.DSL._
 import org.mockserver.client.server.{ForwardChainExpectation, MockServerClient}
@@ -64,6 +65,36 @@ class DslTest extends FlatSpec with MockFactory {
     when get "/path" respond Ok
   }
 
+  "POST /path" must "respond with status code 200" in {
+    expectRequestResponse(
+      mockRequest().withMethod("POST").withPath("/path"),
+      mockResponse().withStatusCode(200))
+
+    implicit val client = mockServerClient
+
+    when post "/path" respond Ok
+  }
+
+  "PUT /path" must "respond with status code 200" in {
+    expectRequestResponse(
+      mockRequest().withMethod("PUT").withPath("/path"),
+      mockResponse().withStatusCode(200))
+
+    implicit val client = mockServerClient
+
+    when put "/path" respond Ok
+  }
+
+  "DELETE /path" must "respond with status code 200" in {
+    expectRequestResponse(
+      mockRequest().withMethod("DELETE").withPath("/path"),
+      mockResponse().withStatusCode(200))
+
+    implicit val client = mockServerClient
+
+    when delete "/path" respond Ok
+  }
+
   "GET /path with one query parameter" must "respond with status code 200" in {
     expectRequestResponse(
       mockRequest()
@@ -119,8 +150,8 @@ class DslTest extends FlatSpec with MockFactory {
         .withPath("/path")
         .withQueryStringParameter("p1", "pv1")
         .withQueryStringParameter("p2", "pv2")
-        .withHeader("h1", "hv1")
-        .withHeader("h2", "hv2"),
+        .withHeader("Connection", "keep-alive")
+        .withHeader("Cache-Control", "no-cache"),
       mockResponse()
         .withStatusCode(400))
 
@@ -129,8 +160,8 @@ class DslTest extends FlatSpec with MockFactory {
     when get "/path" has {
       param("p1", "pv1") and
         param("p2", "pv2") and
-        header("h1", "hv1") and
-        header("h2", "hv2")
+        Connection("keep-alive") and
+        CacheControl("no-cache")
     } respond {
       BadRequest
     }
