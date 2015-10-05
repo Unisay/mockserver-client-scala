@@ -188,6 +188,14 @@ object DSL {
     val PayloadTooLarge = status(413)
     val RequestUriTooLong = status(414)
     val UnsupportedMediaType = status(415)
+
+    val InternalServerError = status(500)
+    val NotImplemented = status(501)
+    val BadGateway = status(502)
+    val ServiceUnavailable = status(503)
+    val GatewayTimeout = status(504)
+    val HttpVersionNotSupported = status(505)
+    val UnknownError = status(520)
   }
 
 }
