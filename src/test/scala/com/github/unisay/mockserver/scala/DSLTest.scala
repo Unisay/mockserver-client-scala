@@ -1,5 +1,7 @@
 package com.github.unisay.mockserver.scala
 
+import java.util.concurrent.TimeUnit
+
 import com.github.unisay.mockserver.scala.DSL.Headers._
 import com.github.unisay.mockserver.scala.DSL.Statuses._
 import com.github.unisay.mockserver.scala.DSL._
@@ -10,7 +12,7 @@ import org.mockserver.model.{HttpRequest, HttpResponse}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FlatSpec
 
-class DslTest extends FlatSpec with MockFactory {
+class DSLTest extends FlatSpec with MockFactory {
 
   val mockServerClient = mock[NoArgMockServerClient]
   val forwardChain = mock[NoArgForwardChain]
@@ -26,7 +28,7 @@ class DslTest extends FlatSpec with MockFactory {
   "Any method for any path with explicit client" must "respond with status code 200" in {
     expectRequestResponse(mockRequest(), mockResponse().withStatusCode(200))
 
-   always(mockServerClient) respond Ok
+    always(mockServerClient) respond Ok
   }
 
   "GET for any path" must "respond with status code 200" in {
@@ -210,6 +212,22 @@ class DslTest extends FlatSpec with MockFactory {
     implicit val client = mockServerClient
 
     when post *** has "The Request Body".getBytes respond Ok + "The Response Body".getBytes
+  }
+
+  "PUT /path" must "respond with delay 10.seconds" in {
+    expectRequestResponse(
+      mockRequest()
+        .withMethod("PUT")
+        .withPath("/path"),
+      mockResponse()
+        .withStatusCode(200)
+        .withDelay(TimeUnit.MILLISECONDS, 10000)
+    )
+
+    implicit val client = mockServerClient
+    import scala.concurrent.duration._
+
+    when put "/path" respond Ok + after(10.seconds)
   }
 
   class NoArgMockServerClient extends MockServerClient("localhost", 1234)

@@ -11,8 +11,8 @@ lazy val `mockserver-client-scala` = (project in file("."))
   .settings(libraryDependencies ++= Seq(
     "org.mock-server"            %  "mockserver-client-java"      % "3.10.0",
     "org.slf4j"                  %  "slf4j-api"                   % "1.7.12",
-    "com.typesafe.scala-logging" %% "scala-logging"               % "3.0.0",
     "ch.qos.logback"             %  "logback-classic"             % "1.1.3",
+    "com.typesafe.scala-logging" %% "scala-logging"               % "3.0.0",
     "org.scalatest"              %% "scalatest"                   % "2.2.5"    % "test",
     "org.scalamock"              %% "scalamock-scalatest-support" % "3.2.2"    % "test"
   ))

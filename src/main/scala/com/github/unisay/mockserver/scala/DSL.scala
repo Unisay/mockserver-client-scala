@@ -1,12 +1,14 @@
 package com.github.unisay.mockserver.scala
 
 import java.nio.charset.Charset
+import java.util.concurrent.TimeUnit
 
 import org.mockserver.client.server.MockServerClient
 import org.mockserver.model.HttpRequest.{request => mockRequest}
 import org.mockserver.model.HttpResponse.{response => mockResponse}
 import org.mockserver.model.{HttpRequest => MockRequest, HttpResponse => MockResponse}
 
+import scala.concurrent.duration.FiniteDuration
 import scala.language.implicitConversions
 
 object DSL {
@@ -106,6 +108,10 @@ object DSL {
 
     override def apply(response: MockResponse): MockResponse =
       response.withBody(bytes)
+  }
+
+  case class after(delay: FiniteDuration) extends ResponseModifier {
+    override def apply(response: MockResponse): MockResponse = response.withDelay(TimeUnit.MILLISECONDS, delay.toMillis)
   }
 
   val *** = ""
