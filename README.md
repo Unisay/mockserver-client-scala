@@ -30,11 +30,11 @@ when post "/user" has {
 }
 ```
 
-For more examples please see the test spec (DSLTest.scala)
+For more examples please see the test spec ([DSLTest.scala](/src/test/scala/com/github/unisay/mockserver/scala/DSLTest.scala))
 
 ## Installation:
 
 ```
 resolvers += ("Unisay at bintray" at "http://dl.bintray.com/unisay/maven")
-libraryDependencies += "com.github.unisay" %% "mockserver-client-scala" % "0.1.0" % "test"
+libraryDependencies += "com.github.unisay" %% "mockserver-client-scala" % "0.1.0"
 ```
