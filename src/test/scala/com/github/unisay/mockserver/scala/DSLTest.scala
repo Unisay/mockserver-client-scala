@@ -214,6 +214,22 @@ class DSLTest extends FlatSpec with MockFactory {
     when post *** has "The Request Body".getBytes respond Ok + "The Response Body".getBytes
   }
 
+  "PUT /path" must "after 10.seconds respond Ok" in {
+    expectRequestResponse(
+      mockRequest()
+        .withMethod("PUT")
+        .withPath("/path"),
+      mockResponse()
+        .withStatusCode(200)
+        .withDelay(TimeUnit.MILLISECONDS, 10000)
+    )
+
+    implicit val client = mockServerClient
+    import scala.concurrent.duration._
+
+    when put "/path" after 10.seconds respond Ok
+  }
+
   "PUT /path" must "respond with delay 10.seconds" in {
     expectRequestResponse(
       mockRequest()
@@ -227,7 +243,7 @@ class DSLTest extends FlatSpec with MockFactory {
     implicit val client = mockServerClient
     import scala.concurrent.duration._
 
-    when put "/path" respond Ok + after(10.seconds)
+    when put "/path" respond Ok + delay(10.seconds)
   }
 
   class NoArgMockServerClient extends MockServerClient("localhost", 1234)

@@ -38,17 +38,27 @@ object DSL {
     def apply(mockResponse: MockResponse): MockResponse
   }
 
+  object DoNothingResponseModifier extends ResponseModifier {
+    override def apply(mockResponse: MockResponse): MockResponse = mockResponse
+  }
+
   case class CompositeResponseModifier(responseModifiers: ResponseModifier*) extends ResponseModifier {
     override def apply(response: MockResponse): MockResponse =
       responseModifiers.foldLeft(response)((response, modifier) => modifier(response))
   }
 
-  class ExpectationBuilder(val requestModifier: RequestModifier)(implicit mockServerClient: MockServerClient) {
-    def has(additionalRequestModifier: RequestModifier): ExpectationBuilder =
-      new ExpectationBuilder(requestModifier and additionalRequestModifier)
+  case class ExpectationBuilder(requestModifier: RequestModifier,
+                                responseModifier: ResponseModifier = DoNothingResponseModifier)
+                               (implicit mockServerClient: MockServerClient) {
 
-    def respond(responseModifier: ResponseModifier): Unit =
-      mockServerClient.when(requestModifier(mockRequest)).respond(responseModifier(mockResponse))
+    def has(additionalRequestModifier: RequestModifier): ExpectationBuilder =
+      ExpectationBuilder(requestModifier and additionalRequestModifier, responseModifier)
+
+    def after(duration: FiniteDuration): ExpectationBuilder =
+      ExpectationBuilder(requestModifier, responseModifier + delay(duration))
+
+    def respond(modifier: ResponseModifier): Unit =
+      mockServerClient.when(requestModifier(mockRequest)).respond((responseModifier + modifier)(mockResponse))
   }
 
   class MethodModifier(method: String) extends RequestModifier {
@@ -110,29 +120,30 @@ object DSL {
       response.withBody(bytes)
   }
 
-  case class after(delay: FiniteDuration) extends ResponseModifier {
-    override def apply(response: MockResponse): MockResponse = response.withDelay(TimeUnit.MILLISECONDS, delay.toMillis)
+  case class delay(duration: FiniteDuration) extends ResponseModifier {
+    override def apply(response: MockResponse): MockResponse =
+      response.withDelay(TimeUnit.MILLISECONDS, duration.toMillis)
   }
 
   val *** = ""
 
   def when(implicit client: MockServerClient) = new {
 
-    def get(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(GET + path(pathStr))
-    
-    def head(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(HEAD + path(pathStr))
+    def get(pathStr: String = ***): ExpectationBuilder = ExpectationBuilder(GET + path(pathStr))
 
-    def post(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(POST + path(pathStr))
-    
-    def put(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(PUT + path(pathStr))
+    def head(pathStr: String = ***): ExpectationBuilder = ExpectationBuilder(HEAD + path(pathStr))
 
-    def delete(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(DELETE + path(pathStr))
+    def post(pathStr: String = ***): ExpectationBuilder = ExpectationBuilder(POST + path(pathStr))
 
-    def trace(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(TRACE + path(pathStr))
+    def put(pathStr: String = ***): ExpectationBuilder = ExpectationBuilder(PUT + path(pathStr))
 
-    def connect(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(CONNECT + path(pathStr))
+    def delete(pathStr: String = ***): ExpectationBuilder = ExpectationBuilder(DELETE + path(pathStr))
 
-    def options(pathStr: String = ***): ExpectationBuilder = new ExpectationBuilder(OPTIONS + path(pathStr))
+    def trace(pathStr: String = ***): ExpectationBuilder = ExpectationBuilder(TRACE + path(pathStr))
+
+    def connect(pathStr: String = ***): ExpectationBuilder = ExpectationBuilder(CONNECT + path(pathStr))
+
+    def options(pathStr: String = ***): ExpectationBuilder = ExpectationBuilder(OPTIONS + path(pathStr))
   }
 
   def always(implicit client: MockServerClient) = new ExpectationBuilder(CompositeRequestModifier())
