@@ -1,6 +1,6 @@
 lazy val `mockserver-client-scala` = (project in file("."))
   .settings(name := "mockserver-client-scala")
-  .settings(version := "0.1.0")
+  .settings(version := "0.1.1")
   .settings(scalaVersion := "2.11.7")
   .settings(organization := "com.github.unisay")
   .settings(licenses += ("MIT", url("http://opensource.org/licenses/MIT")))
