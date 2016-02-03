@@ -8,18 +8,18 @@ Implemented as a wrapper around [Java Client](https://github.com/jamesdbloom/moc
 ## Examples
 
 ### Simplest case
-```
-always respond BadRequest
+```scala
+forAnyRequest respond BadRequest once
 ```
 
 ### One-liner with request and response bodies
-```
-when get "/path" has "Request body" respond Ok + "Response body"
+```scala
+when get "/path" has "Request body" respond Ok + "Response body" exactly 3.times
 ```
 
 ### All features:
 
-```
+```scala
 when post "/user" has {
   param("email", "john.doe@gmail.com") and
   param("rating", 99) and
@@ -27,7 +27,7 @@ when post "/user" has {
   body("firstName=John&lastName=Doe")
 } after 10.seconds respond {
   Accepted and Location("http://localhost:8080/user/123")
-}
+} once
 ```
 
 For more examples please see the test spec ([DSLTest.scala](/src/test/scala/com/github/unisay/mockserver/scala/DSLTest.scala))
@@ -36,5 +36,5 @@ For more examples please see the test spec ([DSLTest.scala](/src/test/scala/com/
 
 ```
 resolvers += ("Unisay at bintray" at "http://dl.bintray.com/unisay/maven")
-libraryDependencies += "com.github.unisay" %% "mockserver-client-scala" % "0.1.1"
+libraryDependencies += "com.github.unisay" %% "mockserver-client-scala" % "0.2.0"
 ```
