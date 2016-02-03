@@ -6,11 +6,14 @@ import com.github.unisay.mockserver.scala.DSL.Headers._
 import com.github.unisay.mockserver.scala.DSL.Statuses._
 import com.github.unisay.mockserver.scala.DSL._
 import org.mockserver.client.server.{ForwardChainExpectation, MockServerClient}
+import org.mockserver.matchers.Times
 import org.mockserver.model.HttpRequest.{request => mockRequest}
 import org.mockserver.model.HttpResponse.{response => mockResponse}
 import org.mockserver.model.{HttpRequest, HttpResponse}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FlatSpec
+
+import scala.language.postfixOps
 
 class DSLTest extends FlatSpec with MockFactory {
 
@@ -22,13 +25,13 @@ class DSLTest extends FlatSpec with MockFactory {
 
     implicit val client = mockServerClient
 
-    always respond Ok
+    forAnyRequest respond Ok always
   }
 
   "Any method for any path with explicit client" must "respond with status code 200" in {
     expectRequestResponse(mockRequest(), mockResponse().withStatusCode(200))
 
-    always(mockServerClient) respond Ok
+    forAnyRequest(mockServerClient) respond Ok always
   }
 
   "GET for any path" must "respond with status code 200" in {
@@ -38,13 +41,13 @@ class DSLTest extends FlatSpec with MockFactory {
 
     implicit val client = mockServerClient
 
-    when get *** respond Ok
+    when get *** respond Ok always
   }
 
   "GET for any path with explicit client" must "respond with status code 200" in {
     expectRequestResponse(mockRequest().withMethod("GET"), mockResponse().withStatusCode(200))
 
-    when(mockServerClient) get *** respond Ok
+    when(mockServerClient) get *** respond Ok always
   }
 
   "POST for any path" must "respond with status code 200" in {
@@ -54,7 +57,7 @@ class DSLTest extends FlatSpec with MockFactory {
 
     implicit val client = mockServerClient
 
-    when post *** respond Ok
+    when post *** respond Ok always
   }
 
   "GET /path" must "respond with status code 200" in {
@@ -64,7 +67,7 @@ class DSLTest extends FlatSpec with MockFactory {
 
     implicit val client = mockServerClient
 
-    when get "/path" respond Ok
+    when get "/path" respond Ok always
   }
 
   "POST /path" must "respond with status code 200" in {
@@ -74,7 +77,7 @@ class DSLTest extends FlatSpec with MockFactory {
 
     implicit val client = mockServerClient
 
-    when post "/path" respond Ok
+    when post "/path" respond Ok always
   }
 
   "PUT /path" must "respond with status code 200" in {
@@ -84,7 +87,7 @@ class DSLTest extends FlatSpec with MockFactory {
 
     implicit val client = mockServerClient
 
-    when put "/path" respond Ok
+    when put "/path" respond Ok always
   }
 
   "DELETE /path" must "respond with status code 200" in {
@@ -94,7 +97,7 @@ class DSLTest extends FlatSpec with MockFactory {
 
     implicit val client = mockServerClient
 
-    when delete "/path" respond Ok
+    when delete "/path" respond Ok always
   }
 
   "GET /path with one query parameter" must "respond with status code 200" in {
@@ -108,7 +111,7 @@ class DSLTest extends FlatSpec with MockFactory {
 
     implicit val client = mockServerClient
 
-    when get "/path" has param("k", "v") respond Ok
+    when get "/path" has param("k", "v") respond Ok always
   }
 
   "GET /path with many query parameters" must "respond with status code 200" in {
@@ -125,7 +128,7 @@ class DSLTest extends FlatSpec with MockFactory {
 
     when get "/path" has {
       param("k1", "v1") and param("k2", "v2")
-    } respond Ok
+    } respond Ok always
   }
 
   "GET /path with one query parameter and one header" must "respond with status code 200" in {
@@ -142,7 +145,7 @@ class DSLTest extends FlatSpec with MockFactory {
 
     when get "/path" has {
       param("p", 1) and header("h", 2)
-    } respond Ok
+    } respond Ok always
   }
 
   "GET /path with many query parameters and many headers" must "respond with status code 400" in {
@@ -166,7 +169,7 @@ class DSLTest extends FlatSpec with MockFactory {
         CacheControl("no-cache")
     } respond {
       BadRequest
-    }
+    } always
   }
 
   "GET /path with many query parameters + many headers" must "respond with status code 200" in {
@@ -183,7 +186,7 @@ class DSLTest extends FlatSpec with MockFactory {
 
     implicit val client = mockServerClient
 
-    when get "/path" has param("p1", "pv1") + param("p2", "pv2") + header("h1", "hv1") + header("h2", "hv2") respond Ok
+    when get "/path" has param("p1", "pv1") + param("p2", "pv2") + header("h1", "hv1") + header("h2", "hv2") respond Ok always
   }
 
   "GET /path with string body" must "respond with status code 200 and string body" in {
@@ -197,7 +200,7 @@ class DSLTest extends FlatSpec with MockFactory {
 
     implicit val client = mockServerClient
 
-    when post *** has "The Request Body" respond Ok + "The Response Body"
+    when post *** has "The Request Body" respond Ok + "The Response Body" always
   }
 
   "GET /path with byte body" must "respond with status code 200 and byte body" in {
@@ -211,7 +214,7 @@ class DSLTest extends FlatSpec with MockFactory {
 
     implicit val client = mockServerClient
 
-    when post *** has "The Request Body".getBytes respond Ok + "The Response Body".getBytes
+    when post *** has "The Request Body".getBytes respond Ok + "The Response Body".getBytes always
   }
 
   "PUT /path" must "after 10.seconds respond Ok" in {
@@ -227,7 +230,7 @@ class DSLTest extends FlatSpec with MockFactory {
     implicit val client = mockServerClient
     import scala.concurrent.duration._
 
-    when put "/path" after 10.seconds respond Ok
+    when put "/path" after 10.seconds respond Ok always
   }
 
   "PUT /path" must "respond with delay 10.seconds" in {
@@ -243,17 +246,41 @@ class DSLTest extends FlatSpec with MockFactory {
     implicit val client = mockServerClient
     import scala.concurrent.duration._
 
-    when put "/path" respond Ok + delay(10.seconds)
+    when put "/path" respond Ok + delay(10.seconds) always
+  }
+
+  "GET /path" must "respond once" in {
+    expectRequestResponse(
+      mockRequest().withMethod("GET").withPath("/path"),
+      mockResponse().withStatusCode(200),
+      Times.once()
+    )
+
+    implicit val client = mockServerClient
+
+    when get "/path" respond Ok once
+  }
+
+ "GET /path" must "respond exactly 42 times" in {
+    expectRequestResponse(
+      mockRequest().withMethod("GET").withPath("/path"),
+      mockResponse().withStatusCode(200),
+      Times.exactly(42)
+    )
+
+    implicit val client = mockServerClient
+
+    when get "/path" respond Ok exactly 42.times
   }
 
   class NoArgMockServerClient extends MockServerClient("localhost", 1234)
 
   class NoArgForwardChain extends ForwardChainExpectation(null, null)
 
-  private def expectRequestResponse(expectedRequest: HttpRequest, expectedResponse: HttpResponse): Unit = {
-    {
-      mockServerClient.when(_: HttpRequest)
-    }.expects(expectedRequest).returns(forwardChain)
+  private def expectRequestResponse(expectedRequest: HttpRequest,
+                                    expectedResponse: HttpResponse,
+                                    times: Times = Times.unlimited()) = {
+    { mockServerClient.when(_: HttpRequest, _: Times) }.expects(expectedRequest, times).returns(forwardChain)
     (forwardChain.respond _).expects(expectedResponse)
   }
 

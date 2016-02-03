@@ -4,6 +4,7 @@ import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 
 import org.mockserver.client.server.MockServerClient
+import org.mockserver.matchers.Times
 import org.mockserver.model.HttpRequest.{request => mockRequest}
 import org.mockserver.model.HttpResponse.{response => mockResponse}
 import org.mockserver.model.{HttpRequest => MockRequest, HttpResponse => MockResponse}
@@ -16,6 +17,12 @@ object DSL {
   implicit def string2body(string: String): body = body(string)
 
   implicit def bytes2body(array: Array[Byte]): bytes = bytes(array)
+
+  implicit def intToTimesOps(times: Int): TimesOps = TimesOps(times)
+
+  case class TimesOps(exactlyTimes: Int) {
+      def times: Times = Times.exactly(exactlyTimes)
+  }
 
   sealed trait RequestModifier {
     def +(modifier: RequestModifier): RequestModifier = and(modifier)
@@ -57,12 +64,22 @@ object DSL {
     def after(duration: FiniteDuration): ExpectationBuilder =
       ExpectationBuilder(requestModifier, responseModifier + delay(duration))
 
-    def respond(modifier: ResponseModifier): Unit =
-      mockServerClient.when(requestModifier(mockRequest)).respond((responseModifier + modifier)(mockResponse))
+    def respond(modifier: ResponseModifier): ExpectationSetter =
+      new ExpectationSetter(this.copy(responseModifier = CompositeResponseModifier(this.responseModifier, modifier)))
   }
 
   class MethodModifier(method: String) extends RequestModifier {
     override def apply(request: MockRequest): MockRequest = request.withMethod(method)
+  }
+
+  class ExpectationSetter(val builder: ExpectationBuilder)(implicit mockServerClient: MockServerClient) {
+    def apply(times: Times): Unit = mockServerClient
+      .when(builder.requestModifier(mockRequest), times)
+      .respond(builder.responseModifier(mockResponse))
+    def always = apply(Times.unlimited())
+    def once = apply(Times.once())
+    def never = apply(Times.exactly(0))
+    def exactly(times: Times) = apply(times)
   }
 
   case object GET extends MethodModifier("GET")
@@ -146,7 +163,7 @@ object DSL {
     def options(pathStr: String = ***): ExpectationBuilder = ExpectationBuilder(OPTIONS + path(pathStr))
   }
 
-  def always(implicit client: MockServerClient) = new ExpectationBuilder(CompositeRequestModifier())
+  def forAnyRequest(implicit client: MockServerClient) = new ExpectationBuilder(CompositeRequestModifier())
 
   object Headers {
     def Location(url: String) = header("Location", url)
