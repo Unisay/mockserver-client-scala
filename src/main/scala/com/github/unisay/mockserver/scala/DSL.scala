@@ -7,7 +7,7 @@ import org.mockserver.client.server.MockServerClient
 import org.mockserver.matchers.Times
 import org.mockserver.model.HttpRequest.{request => mockRequest}
 import org.mockserver.model.HttpResponse.{response => mockResponse}
-import org.mockserver.model.{HttpRequest => MockRequest, HttpResponse => MockResponse}
+import org.mockserver.model.{RegexBody, HttpRequest => MockRequest, HttpResponse => MockResponse}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.language.implicitConversions
@@ -127,6 +127,10 @@ object DSL {
 
     override def apply(response: MockResponse): MockResponse =
       response.withBody(body)
+  }
+
+  case class regexBody(body: String) extends RequestModifier {
+    override def apply(request: MockRequest): MockRequest = request.withBody(new RegexBody(body))
   }
 
   case class bytes(bytes: Array[Byte]) extends RequestModifier with ResponseModifier {
