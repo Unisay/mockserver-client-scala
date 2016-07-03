@@ -9,7 +9,7 @@ import org.mockserver.client.server.{ForwardChainExpectation, MockServerClient}
 import org.mockserver.matchers.Times
 import org.mockserver.model.HttpRequest.{request => mockRequest}
 import org.mockserver.model.HttpResponse.{response => mockResponse}
-import org.mockserver.model.{HttpRequest, HttpResponse}
+import org.mockserver.model.{HttpRequest, HttpResponse, RegexBody}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FlatSpec
 
@@ -215,6 +215,20 @@ class DSLTest extends FlatSpec with MockFactory {
     implicit val client = mockServerClient
 
     when post *** has "The Request Body".getBytes respond Ok + "The Response Body".getBytes always
+  }
+
+  "GET /path with regex body" must "respond with status code 200 and string body" in {
+    expectRequestResponse(
+      mockRequest()
+        .withMethod("POST")
+        .withBody(new RegexBody(".*Request.*")),
+      mockResponse()
+        .withStatusCode(200)
+        .withBody("The Response Body"))
+
+    implicit val client = mockServerClient
+
+    when post *** has regexBody(".*Request.*") respond Ok + "The Response Body" always
   }
 
   "PUT /path" must "after 10.seconds respond Ok" in {
