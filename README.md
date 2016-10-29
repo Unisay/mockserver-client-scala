@@ -35,6 +35,6 @@ For more examples please see the test spec ([DSLTest.scala](/src/test/scala/com/
 ## Installation:
 
 ```
-resolvers += ("Unisay at bintray" at "http://dl.bintray.com/unisay/maven")
+resolvers += Resolver.bintrayRepo("unisay", "maven")
 libraryDependencies += "com.github.unisay" %% "mockserver-client-scala" % "0.2.0"
 ```
