@@ -1,7 +1,7 @@
 lazy val `mockserver-client-scala` = (project in file("."))
   .settings(name := "mockserver-client-scala")
-  .settings(version := "0.2.1")
-  .settings(scalaVersion := "2.11.8")
+  .settings(version := "0.2.2")
+  .settings(scalaVersion := "2.12.3")
   .settings(organization := "com.github.unisay")
   .settings(licenses += ("MIT", url("http://opensource.org/licenses/MIT")))
   .settings(publishMavenStyle := true)
@@ -10,11 +10,11 @@ lazy val `mockserver-client-scala` = (project in file("."))
   .settings(bintrayOrganization := None)
   .settings(libraryDependencies ++= Seq(
     "org.mock-server"            %  "mockserver-client-java"      % "3.11",
-    "org.slf4j"                  %  "slf4j-api"                   % "1.7.12",
-    "ch.qos.logback"             %  "logback-classic"             % "1.1.3",
-    "com.typesafe.scala-logging" %% "scala-logging"               % "3.0.0",
-    "org.scalatest"              %% "scalatest"                   % "2.2.5"    % "test",
-    "org.scalamock"              %% "scalamock-scalatest-support" % "3.2.2"    % "test"
+    "org.slf4j"                  %  "slf4j-api"                   % "1.7.25",
+    "ch.qos.logback"             %  "logback-classic"             % "1.2.3",
+    "com.typesafe.scala-logging" %% "scala-logging"               % "3.7.2",
+    "org.scalatest"              %% "scalatest"                   % "3.0.1"    % "test",
+    "org.scalamock"              %% "scalamock-scalatest-support" % "3.6.0"    % "test"
   ))
   .settings(scalacOptions ++= Seq(
     "-encoding", "UTF-8",
@@ -35,3 +35,4 @@ lazy val `mockserver-client-scala` = (project in file("."))
     "-language:reflectiveCalls",
     "-language:postfixOps" // too lazy?
   ))
+  .settings(crossScalaVersions ++= Seq("2.11.11", "2.12.3"))
